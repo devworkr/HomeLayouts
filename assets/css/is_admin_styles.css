@@ -1,0 +1,156 @@
+.layout_input {
+    width: 100%;
+}
+
+.selected_posts {
+    min-height: 100px;
+}
+.loader {
+    border: 16px solid #f3f3f3;
+    -webkit-animation: spin 2s linear infinite;
+    animation: spin 2s linear infinite;
+    border-top: 16px solid #3498db;
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    margin: 20px auto;
+}
+.hidden {
+    display: none !important;
+}
+.ui-sortable-handle {
+    cursor: all-scroll;
+}
+.layout_single_post {
+    cursor: pointer;
+}
+
+.selected {
+    border: 1px solid red;
+}
+.loadersmall {
+    border: 5px solid #f3f3f3;
+    -webkit-animation: spin 1s linear infinite;
+    animation: spin 1s linear infinite;
+    border-top: 5px solid #555;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+}
+
+@-webkit-keyframes spin {
+    0% { 
+        -webkit-transform: rotate(0deg);
+        -ms-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+
+    100% {
+        -webkit-transform: rotate(360deg);
+        -ms-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes spin {
+    0% { 
+        -webkit-transform: rotate(0deg);
+        -ms-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+
+    100% {
+        -webkit-transform: rotate(360deg);
+        -ms-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+.search_input {
+    width: 100%;
+    padding: 5px;
+    height: 36px;
+    margin: 5px 0px;
+}
+.input_loading {
+    background:url('../images/small_loader.gif') no-repeat right center;
+}
+
+span.__post {
+    display: inline-block;
+    width: 100%;
+    padding: 4px;
+    line-height: 13px;
+    margin-bottom: 5px;
+    background: #e2e2e2;
+    cursor: pointer;
+}
+
+.__post:hover{
+    color: #fff;
+    background: #000;
+}
+span.__no_resut {
+    text-align: center;
+    display: inline-block;
+    width: 100%;
+    padding: 8px;
+    font-size: 15px;
+    font-weight: 600;
+}
+.__search_wrap {
+    position: relative;
+}
+
+.__search_wrap .post_search_result {
+    position: absolute;
+    background: #fff;
+    z-index: 99;
+    width: 100%;
+    min-height: 100px;
+    border: 1px solid #ccc;
+    display: none;
+    max-height: 200px;
+    overflow: auto;
+}
+/* admin homelay out */
+
+
+#is_layout_admin_posts {
+	display: flex;
+	align-items: stretch;
+	flex-wrap: wrap;
+}
+#is_layout_admin_posts > .layout_single_post {
+	padding: 15px;
+}
+#is_layout_admin_posts > .layout_single_post {
+	max-width: 23%;
+	border: 1px solid #ccc;
+	margin: 1%;
+	border-radius: 3px;
+	box-shadow: 1px 2px 4px rgba(0,0,0,.2);
+}
+#is_layout_admin_posts > .layout_single_post .layout_post_thumb img {
+	width: 100%;
+	min-height: 200px;
+	object-fit: cover;
+	margin-bottom: 10px;
+}
+#is_layout_admin_posts > .layout_single_post .layout_post_title {
+    font-weight: 600;
+    text-align: center;
+    min-height: 27px;
+    font-size: 15px;
+    line-height: 25px;
+}
+#IS_Layout_posts {
+    padding: 10px 5px;
+}
+
+.layout_single_post.selected .layout_post_title {
+	color:#0073aa;
+}
+#is_layout_admin_posts > .layout_single_post.selected {
+	background: #fff;
+	border: 1px solid #0073aa;
+}
