@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Layout Plugin Base Class
  *
  * @package is-layouts
  * @since   1.0.0
  */
-
 class BaseLayout {
-    
+
     protected static $_instance = null;
-    
     private $layouts = [
         'post_with_title' => 'Posts with title only',
         'post_grid_view' => 'Posts with grid view',
         'posts_with_list' => 'Posts with list view',
         'post_single_column' => 'Posts with single column',
     ];
-    
+
     function __construct() {
         add_action('pre_get_posts', array($this, 'layout_posts_order'));
         add_action('save_post', array($this, 'save_layout_metaboxes'));
+        
     }
     
     public static function instance() {
@@ -28,7 +28,7 @@ class BaseLayout {
         }
         return self::$_instance;
     }
-
+    
     public function layout_meta_box_callback($post) {
         $value = get_post_meta($post->ID, '_layout_style', true);
         $html = "<select name='layout_style' class='layout_class layout_input' id='is_layout_style'>";
@@ -45,7 +45,7 @@ class BaseLayout {
 
         echo $html;
     }
-    
+
     public function category_id_meta_box_callback($post) {
         $categories = get_categories(['parent' => null]);
         // Add a nonce field so we can check for it later.
@@ -66,6 +66,7 @@ class BaseLayout {
 
         echo $html;
     }
+
     public function selected_posts_meta_box_callback($post) {
         $selected_posts = get_post_meta($post->ID, '_layout_posts', true);
         $category_id = get_post_meta($post->ID, '_category_id', true);
@@ -92,7 +93,7 @@ class BaseLayout {
 
         echo $html;
     }
-    
+
     public function layout_posts_order($wp_query) {
         $objects = ['home_layouts', 'categories_layouts'];
         if (empty($objects))
@@ -137,7 +138,7 @@ class BaseLayout {
             }
         }
     }
-    
+
     protected function get_post_arg($label = 'Home', $icon = false) {
         $labels = array(
             'name' => _x('Layouts', 'Post Type General Name', 'is-layouts'),
@@ -173,7 +174,7 @@ class BaseLayout {
             'show_in_admin_bar' => true,
             'menu_position' => 5,
             'can_export' => true,
-            'menu_icon'   => $icon,
+            'menu_icon' => $icon,
             'has_archive' => true,
             'exclude_from_search' => false,
             'publicly_queryable' => true,
@@ -182,7 +183,7 @@ class BaseLayout {
 
         return $args;
     }
-    
+
     /**
      * When the post is saved, saves our custom data.
      *
@@ -227,7 +228,7 @@ class BaseLayout {
             // Update the meta field in the database.
             update_post_meta($post_id, '_layout_style', $layout_style);
         }
-        
+
         if (isset($_POST['parent_category_id'])) {
             // Sanitize user input.
             $parent_cat = sanitize_text_field($_POST['parent_category_id']);
@@ -235,8 +236,8 @@ class BaseLayout {
             // Update the meta field in the database.
             update_post_meta($post_id, '_parent_category_id', $parent_cat);
         }
-        
-        
+
+
         if (isset($_POST['category_id'])) {
             // Sanitize user input.
             $category_id = sanitize_text_field($_POST['category_id']);
@@ -252,7 +253,7 @@ class BaseLayout {
             update_post_meta($post_id, '_layout_posts', $layout_posts);
         }
     }
-    
+
     private function getSortedPosts($selectedposts, $category_id) {
         if (!$selectedposts) {
             return array();
@@ -280,4 +281,5 @@ class BaseLayout {
             return '<img src="' . IS_LAYOUTS_URL . '/assets/images/default-image.png" alt="<?php the_title(); ?>" />';
         }
     }
+
 }

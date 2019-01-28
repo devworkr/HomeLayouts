@@ -9,8 +9,9 @@
 class LayoutsPostsTypes extends BaseLayout {
 
     protected static $_instance = null;
+
     const posttype = 'home_layouts';
-    
+
     public static function instance() {
         if (is_null(self::$_instance)) {
             self::$_instance = new self();
@@ -22,6 +23,43 @@ class LayoutsPostsTypes extends BaseLayout {
     public static function init() {
         register_post_type(self::posttype, parent::instance()->get_post_arg('Home', 'dashicons-admin-home'));
         add_action('add_meta_boxes', array(self::instance(), 'add_meta_boxes'));
+        add_filter('manage_edit-' . self::posttype . '_columns', array(self::instance(), 'add_post_columns'));
+        add_action('manage_posts_custom_column', array(self::instance(), 'action_custom_columns_content'), 10, 2);
+    }
+    
+    
+    public function action_custom_columns_content($column_id, $post_id) {
+        //run a switch statement for all of the custom columns created
+        switch ($column_id) {
+            case 'category_meta':
+                $_category_id = get_post_meta($post_id, '_category_id', true);
+                $cat = get_the_category_by_ID($_category_id);
+                echo $cat;
+                break;
+            case 'parent_category_meta':
+                $_parent_category_id = get_post_meta($post_id, '_parent_category_id', true);
+                $cat = get_the_category_by_ID($_parent_category_id);
+                echo $cat;
+                break;
+        }
+    }
+
+    /**
+     * Add new columns to the post table
+     *
+     * @param Array $columns - Current columns on the list post
+     */
+    public function add_post_columns($columns) {
+
+        $new = array();
+        $date = $columns['date'];  // save the tags column
+        unset($columns['date']);   // remove it from the columns list
+        foreach ($columns as $key => $value) {
+            $new[$key] = $value;
+        }
+        $new['category_meta'] = 'Category';
+        $new['date'] = $date;
+        return $new;
     }
 
     public function add_meta_boxes() {

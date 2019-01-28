@@ -17,7 +17,8 @@
             delaytime = 500;
             $(document).ready(function () {
                 IsLayout.onInitMethods();
-                IsLayout.fieldSortable();
+                IsLayout.HomeLayoutSort();
+                IsLayout.categoryLayoutSort();
                 IsLayout.postSortable();
             });
             $(document).click(function (e) {
@@ -120,9 +121,23 @@
                 }
             });
         },
-        fieldSortable: function () {
+        HomeLayoutSort: function () {
             $('.post-type-home_layouts #the-list').sortable({
                 items: 'tr',
+                axis: 'y',
+                delay: 100,
+                opacity: 0.75,
+                'update': function (e, ui) {
+                    $.post(ajaxurl, {
+                        action: 'update_layout_order',
+                        order: $('#the-list').sortable('serialize'),
+                    });
+                }
+            });
+        },
+        categoryLayoutSort: function () {
+            $('.post-type-categories_layouts #the-list').sortable({
+                items: 'tr.filter_by_category',
                 axis: 'y',
                 delay: 100,
                 opacity: 0.75,
