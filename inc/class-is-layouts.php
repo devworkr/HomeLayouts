@@ -65,19 +65,18 @@ class IsLayouts {
 
         // register post types for layouts 
         add_action('init', 'LayoutsPostsTypes::init');
-
+        add_action('init', 'LayoutsCategoriesTypes::init');
+        
         // initilize the shortcode class
         add_action('init', array('HomeLayouts_Shortcodes', 'init'));
 
         // ajax handler for category posts 
         add_action('wp_ajax_get_category_posts', array(&$this, 'get_category_posts'));
-        
         add_action('wp_ajax_search_layout_posts', array(&$this, 'search_layout_posts'));
-        
         add_action('wp_ajax_select_from_search', array(&$this, 'select_from_search'));
+        add_action('wp_ajax_get_parent_category', array(&$this, 'get_parent_category'));
         //reorder the layout posts
         add_action('wp_ajax_update_layout_order', array(&$this, 'update_layout_order'));
-        add_action('wp_ajax_update-layout-order-tags', array($this, 'update_layout_order_tags'));
         
         $tax = sanitize_key(@$_REQUEST['taxonomy']);
         /* add browse and text field to upload image and add an fontawesome icon */
@@ -102,37 +101,7 @@ class IsLayouts {
     }
 
     public function layout_plugin_install() {
-        global $wpdb;
-        $result = $wpdb->query("DESCRIBE $wpdb->terms `term_order`");
-        if (!$result) {
-            $query = "ALTER TABLE $wpdb->terms ADD `term_order` INT( 4 ) NULL DEFAULT '0'";
-            $result = $wpdb->query($query);
-        }
         
-        // update categories order
-        
-        $taxonomies = ['category'];
-        foreach($taxonomies as $taxonomy) {
-            $result = $wpdb->get_results("
-                SELECT count(*) as cnt, max(term_order) as max, min(term_order) as min
-                FROM $wpdb->terms AS terms
-                INNER JOIN $wpdb->term_taxonomy AS term_taxonomy ON ( terms.term_id = term_taxonomy.term_id )
-                WHERE term_taxonomy.taxonomy = '" . $taxonomy . "'
-            ");
-            if ($result[0]->cnt == 0 || $result[0]->cnt == $result[0]->max){
-                continue;
-            }    
-            $results = $wpdb->get_results("
-                SELECT terms.term_id
-                FROM $wpdb->terms AS terms
-                INNER JOIN $wpdb->term_taxonomy AS term_taxonomy ON ( terms.term_id = term_taxonomy.term_id )
-                WHERE term_taxonomy.taxonomy = '" . $taxonomy . "'
-                ORDER BY name ASC
-            ");
-            foreach ($results as $key => $result) {
-                $wpdb->update($wpdb->terms, array('term_order' => $key + 1), array('term_id' => $result->term_id));
-            }
-        }
     }
 
     /**
@@ -149,7 +118,9 @@ class IsLayouts {
      * Include required core files used in admin and on the frontend.
      */
     public function includes() {
+        include_once IS_LAYOUTS_ABSPATH . '/inc/ClassBase.php';
         include_once IS_LAYOUTS_ABSPATH . '/inc/home_layouts_posts.php';
+        include_once IS_LAYOUTS_ABSPATH . '/inc/categories_layouts_posts.php';
         include_once IS_LAYOUTS_ABSPATH . '/inc/class_shortcodes.php';
     }
 
@@ -252,36 +223,6 @@ class IsLayouts {
         }
     }
     
-    public function update_layout_order_tags() {
-        global $wpdb;
-
-        parse_str($_POST['order'], $data);
-
-        if (!is_array($data))
-            return false;
-
-        $id_arr = array();
-        foreach ($data as $key => $values) {
-            foreach ($values as $position => $id) {
-                $id_arr[] = $id;
-            }
-        }
-
-        $menu_order_arr = array();
-        foreach ($id_arr as $key => $id) {
-            $results = $wpdb->get_results("SELECT term_order FROM $wpdb->terms WHERE term_id = " . intval($id));
-            foreach ($results as $result) {
-                $menu_order_arr[] = $result->term_order;
-            }
-        }
-        sort($menu_order_arr);
-
-        foreach ($data as $key => $values) {
-            foreach ($values as $position => $id) {
-                $wpdb->update($wpdb->terms, array('term_order' => $menu_order_arr[$position]), array('term_id' => intval($id)));
-            }
-        }
-    }
     /* show browse and font awesome icon option while add category */
 
     public function layout_add_new_iconfield() {
@@ -491,6 +432,19 @@ class IsLayouts {
             die(json_encode(array('status' => 'success', 'content' => $content)));
         }else{
             die(json_encode(array('status' => 'fail', 'message' => 'invalid post')));
+        }
+    }
+    
+    public function get_parent_category() {
+        if(isset($_POST['category'])) {
+            $cat_id = $_POST['category'];
+            $categories = get_categories(['parent' => $cat_id]);
+            $html = "<option value=''>-choose Category-</option>";
+            foreach ($categories as $key => $category) {
+                $html .= "<option value='{$category->term_id}'>{$category->name}</option>";
+            }
+            header('Content-Type: application/json');
+            die(json_encode(array('status' => 'success', 'content' => $html)));
         }
     }
 }

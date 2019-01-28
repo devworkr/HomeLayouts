@@ -19,7 +19,6 @@
                 IsLayout.onInitMethods();
                 IsLayout.fieldSortable();
                 IsLayout.postSortable();
-                IsLayout.CatgorySortable();
             });
             $(document).click(function (e) {
                 if (e.target.parentNode.id == '__search_wrap' || e.target.parentNode.id == '__post_search_result') {
@@ -33,6 +32,10 @@
             $('#is_layout_category').on('change', function () {
                 IsLayout.getCategoryPosts($(this).val());
             });
+            $('#is_layout_parent_category').on('change', function () {
+                IsLayout.getChildCategories($(this).val());
+            });
+            
             $(document).on('click', '.layout_single_post', function () {
                 IsLayout.selectPost($(this));
             });
@@ -97,6 +100,15 @@
                 elem.find('.post_selector').prop('checked', true);
             }
         },
+        getChildCategories : function(category_id) {
+            this.makeCall(ajaxurl, {category: category_id, action: 'get_parent_category'}, function (response) {
+                if (response.status == 'success') {
+                    $('#is_layout_category').html(response.content);
+                } else {
+                    alert(response.message);
+                }
+            });
+        },
         getCategoryPosts: function (category_id) {
             $('#IS_Layout_posts').html(this.settings.loader);
             this.makeCall(ajaxurl, {category: category_id, action: 'get_category_posts'}, function (response) {
@@ -117,24 +129,6 @@
                 'update': function (e, ui) {
                     $.post(ajaxurl, {
                         action: 'update_layout_order',
-                        order: $('#the-list').sortable('serialize'),
-                    });
-                }
-            });
-        },
-        CatgorySortable: function () {
-            $('table.tags #the-list').sortable({
-                'items': 'tr',
-                'axis': 'y',
-                'helper': function (e, ui) {
-                    ui.children().children().each(function () {
-                        $(this).width($(this).width());
-                    });
-                    return ui;
-                },
-                'update': function (e, ui) {
-                    $.post(ajaxurl, {
-                        action: 'update-layout-order-tags',
                         order: $('#the-list').sortable('serialize'),
                     });
                 }
