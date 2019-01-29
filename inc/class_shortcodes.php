@@ -28,7 +28,7 @@ class HomeLayouts_Shortcodes {
         foreach ($child_categories as $key => $category) {
             /* has layout post */
             $layouts = $category->layouts;
-            if($layouts) {
+            if(count($layouts)) {
                 foreach ($layouts as $key => $layout) {
                     $postmeta = get_post_meta($layout->ID);
                     $layout = isset($postmeta['_layout_style']) ? $postmeta['_layout_style'][0] : '';
@@ -42,7 +42,8 @@ class HomeLayouts_Shortcodes {
                         require $templatefile;
                     }
                 }
-            }else{
+            }
+            /*else{
                 $layout = "default";
                 $posts = get_posts(array(
                     'numberposts'   => 1, // get all posts.
@@ -60,7 +61,7 @@ class HomeLayouts_Shortcodes {
                 if(file_exists($templatefile)){
                     require $templatefile;
                 }
-            }
+            }*/
             ///echo "<pre>"; print_r($category); die;
             
         }

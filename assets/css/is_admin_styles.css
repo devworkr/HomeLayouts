@@ -38,6 +38,10 @@
     height: 50px;
 }
 
+#menu-posts-categories_layouts .wp-submenu li:nth-child(2), #menu-posts-categories_layouts .wp-submenu li:nth-child(3) {
+  display: none;
+}
+
 @-webkit-keyframes spin {
     0% { 
         -webkit-transform: rotate(0deg);
