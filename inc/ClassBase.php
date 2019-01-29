@@ -19,7 +19,31 @@ class BaseLayout {
     function __construct() {
         add_action('pre_get_posts', array($this, 'layout_posts_order'));
         add_action('save_post', array($this, 'save_layout_metaboxes'));
-        
+        add_filter('get_terms', array($this, 'layout_get_object_terms'), 10, 3);
+        add_filter('wp_get_object_terms', array($this, 'layout_get_object_terms'), 10, 3);
+    }
+    
+    public function layout_get_object_terms($terms) {
+        $tags = ['category'];
+        if (is_admin() && isset($_GET['orderby']))
+            return $terms;
+        foreach ($terms as $key => $term) {
+            if (is_object($term) && isset($term->taxonomy)) {
+                $taxonomy = $term->taxonomy;
+                if (!in_array($taxonomy, $tags))
+                    return $terms;
+            } else {
+                return $terms;
+            }
+        }
+        usort($terms, array($this, 'taxcmp'));
+        return $terms;
+    }
+    
+    public function taxcmp($a, $b) {
+        if ($a->term_order == $b->term_order)
+            return 0;
+        return ( $a->term_order < $b->term_order ) ? -1 : 1;
     }
     
     public static function instance() {
@@ -98,8 +122,8 @@ class BaseLayout {
         $objects = ['home_layouts', 'categories_layouts'];
         if (empty($objects))
             return false;
+        
         if (is_admin()) {
-
             if (isset($wp_query->query['post_type']) && !isset($_GET['orderby'])) {
                 if (in_array($wp_query->query['post_type'], $objects)) {
                     $wp_query->set('orderby', 'menu_order');
@@ -121,7 +145,6 @@ class BaseLayout {
                     $active = true;
                 }
             }
-
             if (!$active)
                 return false;
 
@@ -160,7 +183,7 @@ class BaseLayout {
             'description' => __("{$label} layout posts", 'is-layouts'),
             'labels' => $labels,
             // Features this CPT supports in Post Editor
-            'supports' => array('title'),
+            'supports' => array('title', 'page-attributes'),
             // You can associate this CPT with a taxonomy or custom taxonomy. 
             /* A hierarchical CPT is like Pages and can have
              * Parent and child items. A non-hierarchical CPT
