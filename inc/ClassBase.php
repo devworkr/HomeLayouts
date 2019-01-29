@@ -19,11 +19,11 @@ class BaseLayout {
     function __construct() {
         add_action('pre_get_posts', array($this, 'layout_posts_order'));
         add_action('save_post', array($this, 'save_layout_metaboxes'));
-        add_filter('get_terms', array($this, 'layout_get_object_terms'), 10, 3);
-        add_filter('wp_get_object_terms', array($this, 'layout_get_object_terms'), 10, 3);
+        //add_filter('get_terms', array($this, 'layout_get_object_terms'), 10, 3);
+        //add_filter('wp_get_object_terms', array($this, 'layout_get_object_terms'), 10, 3);
     }
     
-    public function layout_get_object_terms($terms) {
+    /*public function layout_get_object_terms($terms) {
         $tags = ['category'];
         if (is_admin() && isset($_GET['orderby']))
             return $terms;
@@ -45,7 +45,7 @@ class BaseLayout {
             return 0;
         return ( $a->term_order < $b->term_order ) ? -1 : 1;
     }
-    
+    */
     public static function instance() {
         if (is_null(self::$_instance)) {
             self::$_instance = new self();

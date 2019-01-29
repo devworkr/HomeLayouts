@@ -23,70 +23,78 @@ class HomeLayouts_Shortcodes {
             return ;
         }
 
-        $child_categories = self::get_sorted_categories($parent);
+        $layouts = self::get_categories_layouts($parent);
         do_action('before_home_layouts');
-        foreach ($child_categories as $key => $category) {
-            /* has layout post */
-            $layouts = $category->layouts;
-            if(count($layouts)) {
-                foreach ($layouts as $key => $layout) {
-                    $postmeta = get_post_meta($layout->ID);
-                    $layout = isset($postmeta['_layout_style']) ? $postmeta['_layout_style'][0] : '';
-                    $categoryid = isset($postmeta['_category_id']) ? $postmeta['_category_id'][0] : '';
-                    $posts = isset($postmeta['_layout_posts']) ? unserialize($postmeta['_layout_posts'][0]) : '';
-                    $category = get_term($categoryid);
-                    $isClass = new IsLayouts();
-                    $category->attachment = $isClass->layout_category_column_data(false, 'layout_icon', $categoryid);
+        if(count($layouts)) {
+            foreach ($layouts as $key => $layout) {
+                $postmeta = get_post_meta($layout->ID);
+                $layout = isset($postmeta['_layout_style']) ? $postmeta['_layout_style'][0] : '';
+                $categoryid = isset($postmeta['_category_id']) ? $postmeta['_category_id'][0] : '';
+                $posts = isset($postmeta['_layout_posts']) ? unserialize($postmeta['_layout_posts'][0]) : '';
+                $category = get_term($categoryid);
+                $isClass = new IsLayouts();
+                $category->attachment = $isClass->layout_category_column_data(false, 'layout_icon', $categoryid);
+                $templatefile = IS_LAYOUTS_ABSPATH . "templates/{$layout}.php";
+                if(file_exists($templatefile)){
+                    require $templatefile;
+                }
+            }
+        }else{
+            //default layout 
+            $categories = get_categories(array('parent' => $parent, 'number' => 20));
+            //if has child categories
+            if(count($categories)) {
+                $layout = "default";
+                foreach ($categories as $key => $category) {
+                    $posts = get_posts(array(
+                        'numberposts'   => 1, // get all posts.
+                        'tax_query'     => array(
+                            array(
+                                'taxonomy'  => 'category',
+                                'field'     => 'id',
+                                'terms'     => $category->term_id,
+                            ),
+                        ),
+                        'fields'        => 'ids', // Only get post IDs
+                    ));
+
                     $templatefile = IS_LAYOUTS_ABSPATH . "templates/{$layout}.php";
                     if(file_exists($templatefile)){
                         require $templatefile;
                     }
                 }
-            }
-            /*else{
-                $layout = "default";
-                $posts = get_posts(array(
-                    'numberposts'   => 1, // get all posts.
-                    'tax_query'     => array(
-                        array(
-                            'taxonomy'  => 'category',
-                            'field'     => 'id',
-                            'terms'     => $category->term_id,
-                        ),
-                    ),
-                    'fields'        => 'ids', // Only get post IDs
-                ));
-                
-                $templatefile = IS_LAYOUTS_ABSPATH . "templates/{$layout}.php";
-                if(file_exists($templatefile)){
-                    require $templatefile;
+            } else {
+                if ( have_posts() ) {
+                    while ( have_posts() ) : the_post(); ?>
+                        <div class="col-md-12 white-box">
+                            <div class="white-img-box">
+                                <a href="<?php the_permalink(); ?>">
+                                    <?php the_post_thumbnail(); ?>
+                                </a>
+                                <h3>
+                                    <a href="<?php the_permalink(); ?>">
+                                        <?php the_title(); ?>
+                                    </a>
+                                </h3>
+                                <p></p>
+                                <p><?php the_excerpt(); ?></p>
+                                <p></p>
+                            </div>
+                        </div>
+                    <?php endwhile;
+                    
+                    // Previous/next page navigation.
+                    the_posts_pagination( array(
+                            'prev_text'          => __( 'Previous page', 'is-layouts' ),
+                            'next_text'          => __( 'Next page', 'is-layouts' ),
+                            'before_page_number' => '<span class="meta-nav screen-reader-text">' . __( 'Page', 'is-layouts' ) . ' </span>',
+                    ) );
                 }
-            }*/
-            ///echo "<pre>"; print_r($category); die;
-            
-        }
-
+            }
+        }    
         do_action('after_home_layouts');
     }
     
-    public function get_sorted_categories($parent) {
-        $categories = get_categories(array('parent' => $parent, 'number' => 20));
-        //return $categories;
-        $hasLayoutArray = $hasNotLayoutArray = []; 
-        foreach ($categories as $key => $category) {
-            $hasLayouts = self::get_categories_layouts($category->term_id);
-            //$a=self::get_home_layouts();
-            //echo "<pre>"; print_r($hasLayouts);
-            if($hasLayouts) {
-                $category->layouts = $hasLayouts;
-                $hasLayoutArray[] = $category; 
-            }else{
-                $category->layouts = [];
-                $hasNotLayoutArray[] = $category;
-            }
-        }
-        return array_merge($hasLayoutArray, $hasNotLayoutArray);
-    }
     public function home_layouts_display() {
         $layouts = self::get_home_layouts();
         do_action('before_home_layouts');
@@ -98,7 +106,6 @@ class HomeLayouts_Shortcodes {
             $category = get_term($categoryid);
             $isClass = new IsLayouts();
             $category->attachment = $isClass->layout_category_column_data(false, 'layout_icon', $categoryid);
-            ///echo "<pre>"; print_r($category); die;
             $templatefile = IS_LAYOUTS_ABSPATH . "templates/{$layout}.php";
             if(file_exists($templatefile)){
                 require $templatefile;
@@ -128,7 +135,7 @@ class HomeLayouts_Shortcodes {
             'order' => 'ASC',
             'meta_query' => array(
                 array(
-                    'key' => '_category_id',
+                    'key' => '_parent_category_id',
                     'value' => $cat_id,
                     'compare' => '='
                 )
