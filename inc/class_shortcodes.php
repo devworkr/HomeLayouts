@@ -12,7 +12,7 @@ class HomeLayouts_Shortcodes {
         add_action('pre_get_posts', array($this, 'layout_posts_order'));
         add_action('save_post', array($this, 'save_layout_metaboxes'));
     }
-    public function init() {
+    public static function init() {
         add_shortcode('home_layouts', __CLASS__ . '::home_layouts_display');
         add_shortcode('categories_layouts', __CLASS__ . '::categories_layouts_display');
     }
@@ -29,8 +29,10 @@ class HomeLayouts_Shortcodes {
             foreach ($layouts as $key => $layout) {
                 $postmeta = get_post_meta($layout->ID);
                 $layout = isset($postmeta['_layout_style']) ? $postmeta['_layout_style'][0] : '';
+                // if layout is list view set to 3
+                $maxposts = ($layout == 'posts_with_list') ? 3 : 5;
                 $categoryid = isset($postmeta['_category_id']) ? $postmeta['_category_id'][0] : '';
-                $posts = isset($postmeta['_layout_posts']) ? unserialize($postmeta['_layout_posts'][0]) : '';
+                $posts = isset($postmeta['_layout_posts']) ? array_slice(unserialize($postmeta['_layout_posts'][0]), 0, $maxposts) : '';
                 $category = get_term($categoryid);
                 $isClass = new IsLayouts();
                 $category->attachment = $isClass->layout_category_column_data(false, 'layout_icon', $categoryid);
@@ -95,14 +97,15 @@ class HomeLayouts_Shortcodes {
         do_action('after_home_layouts');
     }
     
-    public function home_layouts_display() {
+    public static function home_layouts_display() {
         $layouts = self::get_home_layouts();
         do_action('before_home_layouts');
         foreach ($layouts as $key => $layout) {
             $postmeta = get_post_meta($layout->ID);
             $layout = isset($postmeta['_layout_style']) ? $postmeta['_layout_style'][0] : '';
+            $maxposts = ($layout == 'posts_with_list') ? 3 : 5;
             $categoryid = isset($postmeta['_category_id']) ? $postmeta['_category_id'][0] : '';
-            $posts = isset($postmeta['_layout_posts']) ? unserialize($postmeta['_layout_posts'][0]) : '';
+            $posts = isset($postmeta['_layout_posts']) ? array_slice(unserialize($postmeta['_layout_posts'][0]), 0, $maxposts) : '';
             $category = get_term($categoryid);
             $isClass = new IsLayouts();
             $category->attachment = $isClass->layout_category_column_data(false, 'layout_icon', $categoryid);
@@ -120,7 +123,7 @@ class HomeLayouts_Shortcodes {
         $args = array(
             'post_type' => 'home_layouts',
             'order' => 'ASC',
-            'numberposts' => 50
+            'numberposts' => 20
         );
         $posts = get_posts($args);
         
@@ -130,7 +133,7 @@ class HomeLayouts_Shortcodes {
     public function get_categories_layouts($cat_id) {
         $args = array(
             'post_type' => 'categories_layouts',
-            'numberposts' => 50,
+            'numberposts' => 20,
             'orderby' => 'menu_order',
             'order' => 'ASC',
             'meta_query' => array(

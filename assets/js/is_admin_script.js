@@ -7,7 +7,7 @@
  */
 
 (function ($) {
-    var custom_uploader, timer, delaytime;
+    var custom_uploader, timer, delaytime, selected_posts = 0;
     var IsLayout = {
         settings: {
             loader: '<div class="loader loadersmall"></div>',
@@ -30,15 +30,22 @@
             });
         },
         onInitMethods: function () {
+            selected_posts = $('#is_layout_admin_posts').find('.post_selector:checked').length;
             $('#is_layout_category').on('change', function () {
                 IsLayout.getCategoryPosts($(this).val());
             });
+            $('#is_layout_style').on('change', function () {
+                selected_posts = 0;
+                $(".layout_single_post").prop('checked', false);
+                $(".layout_single_post").removeClass('selected');
+            });
+            
             $('#is_layout_parent_category').on('change', function () {
                 IsLayout.getChildCategories($(this).val());
             });
             
             $(document).on('click', '.layout_single_post', function () {
-                IsLayout.selectPost($(this));
+                return IsLayout.selectPost($(this));
             });
             $(".layout_icon_button").click(function (e) {
                 IsLayout.layout_image_uploader(e);
@@ -93,12 +100,30 @@
             });
         },
         selectPost: function (elem) {
-            if (elem.hasClass('selected') && elem.find('.post_selector').prop('checked')) {
+            var max_posts = 5;
+            var layout = $('#is_layout_style').val();
+            if(!layout) {
+                alert('select layout');
+                return false;
+            }
+            if(layout == 'posts_with_list') {
+                max_posts = 3;
+            }
+            console.log(selected_posts);
+            if (elem.hasClass('selected')) {
+                
                 elem.removeClass('selected');
                 elem.find('.post_selector').prop('checked', false);
+                selected_posts = selected_posts - 1;
             } else {
-                elem.addClass('selected');
-                elem.find('.post_selector').prop('checked', true);
+                if(selected_posts < max_posts) {
+                    elem.addClass('selected');
+                    elem.find('.post_selector').prop('checked', true);
+                    selected_posts = selected_posts + +1;
+                }else{
+                    alert("you can select only "+max_posts+" posts in this layout");
+                    return false;
+                }    
             }
         },
         getChildCategories : function(category_id) {

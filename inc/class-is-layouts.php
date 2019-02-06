@@ -213,7 +213,6 @@ class IsLayouts {
         foreach ($categories as $position => $cat_id) {
             $wpdb->update($wpdb->terms, array('term_order' => $position), array('term_id' => intval($cat_id)));
         }
-
     }
 
     /* show browse and font awesome icon option while add category */
@@ -317,125 +316,125 @@ class IsLayouts {
                         </div>
                     </td>
                 </tr>
+            </tbody>
+        </table>    
+        <?php
+    }
 
-                <?php
-            }
+    /* Ajax Functions to save image */
 
-            /* Ajax Functions to save image */
+    public function layout_ajax_new_icon() {
+        //retrieve image
+        if (!isset($_POST["img_url"]))
+            die("Error: No URL");
 
-            public function layout_ajax_new_icon() {
-                //retrieve image
-                if (!isset($_POST["img_url"]))
-                    die("Error: No URL");
+        $attach_id = $_POST["attach_id"];
+        $size = $_POST["size"]; // which size are we doing? 
 
-                $attach_id = $_POST["attach_id"];
-                $size = $_POST["size"]; // which size are we doing? 
+        $local_file = get_attached_file($attach_id);
 
+        // generate metadata on basis of sizes
+        $attach_data = wp_generate_attachment_metadata($attach_id, $local_file);
+        wp_update_attachment_metadata($attach_id, $attach_data);
+
+        // return new image URL
+        $data = array("newimg" => image_downsize($attach_id, "layout_icon_medium"),
+            "size" => $size
+        );
+
+        header('Content-Type: application/json');
+        echo json_encode($data);
+        exit();
+    }
+
+    /* save image and font awesome icon option while add/edit category */
+
+    public function layout_save_iconfield($term_id) {
+        $icons = array();
+
+        if (isset($_POST["layout_icon_img"])) {
+            $attach_id = $_POST["layout_icon_img"];
+
+            if ($attach_id > 0) {
                 $local_file = get_attached_file($attach_id);
 
-                // generate metadata on basis of sizes
                 $attach_data = wp_generate_attachment_metadata($attach_id, $local_file);
                 wp_update_attachment_metadata($attach_id, $attach_data);
-
-                // return new image URL
-                $data = array("newimg" => image_downsize($attach_id, "layout_icon_medium"),
-                    "size" => $size
-                );
-
-                header('Content-Type: application/json');
-                echo json_encode($data);
-                exit();
+                $icons['img'] = $attach_id;
             }
-
-            /* save image and font awesome icon option while add/edit category */
-
-            public function layout_save_iconfield($term_id) {
-                $icons = array();
-
-                if (isset($_POST["layout_icon_img"])) {
-                    $attach_id = $_POST["layout_icon_img"];
-
-                    if ($attach_id > 0) {
-                        $local_file = get_attached_file($attach_id);
-
-                        $attach_data = wp_generate_attachment_metadata($attach_id, $local_file);
-                        wp_update_attachment_metadata($attach_id, $attach_data);
-                        $icons['img'] = $attach_id;
-                    }
-                }
-
-                /* then save the taxonomy metadata */
-                update_option("templtax_" . $term_id, $icons);
-
-                global $wpdb;
-                $term_table = $wpdb->prefix . "terms";
-                $cat_icon = $_POST['layout_font_icon'];
-                $layout_select_icon_type = $_POST['layout_select_icon_type'];
-                /* update the service price value in terms table field */
-                if (isset($_POST['layout_select_icon_type'])) {
-                    $sql = "update $term_table set term_font_icon='" . $cat_icon . "' , term_type ='" . $layout_select_icon_type . "' where term_id=" . $term_id;
-                    $wpdb->query($sql);
-                }
-            }
-
-            public function search_layout_posts() {
-
-                if (isset($_POST['value'])) {
-                    $value = $_POST['value'];
-                    $category = $_POST['category'];
-                    $selected = $_POST['selected'];
-                    $args = array('s' => $value, 'cat' => $category, 'post__not_in' => $selected);
-                    $the_query = new WP_Query($args);
-                    if ($the_query->have_posts()) {
-                        $html = "";
-                        while ($the_query->have_posts()) {
-                            $the_query->the_post();
-                            //whatever you want to do with each post
-                            $html .= "<span data-id='" . get_the_ID() . "' class='__post'>" . get_the_title() . "</span>";
-                        }
-                        $response = array('status' => 'success', 'content' => $html);
-                    } else {
-                        $response = array('status' => 'failed', 'message' => '<span class="__no_resut">no post found with keyword.</span>');
-                    }
-
-                    header('Content-Type: application/json');
-                    die(json_encode($response));
-                }
-            }
-
-            public function select_from_search() {
-                header('Content-Type: application/json');
-                if (isset($_POST['post_id'])) {
-                    $post_id = $_POST['post_id'];
-                    $post = get_post($post_id);
-                    if (!$post) {
-                        die(json_encode(array('status' => 'fail', 'message' => 'invalid post')));
-                    }
-
-                    $content = "<div id='post_{$post->ID}' class='layout_single_post col-md-3 selected'>";
-                    $content .= "<input value='{$post->ID}' type='checkbox' name='layout_posts[]' class='hidden post_selector'/>";
-                    $content .= "<div class='layout_post_thumb'>" . $this->getPostThumbnail($post, 'thumb') . "</div>";
-                    $content .= "<div class='layout_post_title'>{$post->post_title}</div>";
-                    $content .= "</div>";
-
-                    die(json_encode(array('status' => 'success', 'content' => $content)));
-                } else {
-                    die(json_encode(array('status' => 'fail', 'message' => 'invalid post')));
-                }
-            }
-
-            public function get_parent_category() {
-                if (isset($_POST['category'])) {
-                    $cat_id = $_POST['category'];
-                    $categories = get_categories(['parent' => $cat_id]);
-                    $html = "<option value=''>-choose Category-</option>";
-                    foreach ($categories as $key => $category) {
-                        $html .= "<option value='{$category->term_id}'>{$category->name}</option>";
-                    }
-                    header('Content-Type: application/json');
-                    die(json_encode(array('status' => 'success', 'content' => $html)));
-                }
-            }
-
         }
-        
+
+        /* then save the taxonomy metadata */
+        update_option("templtax_" . $term_id, $icons);
+
+        global $wpdb;
+        $term_table = $wpdb->prefix . "terms";
+        $cat_icon = $_POST['layout_font_icon'];
+        $layout_select_icon_type = $_POST['layout_select_icon_type'];
+        /* update the service price value in terms table field */
+        if (isset($_POST['layout_select_icon_type'])) {
+            $sql = "update $term_table set term_font_icon='" . $cat_icon . "' , term_type ='" . $layout_select_icon_type . "' where term_id=" . $term_id;
+            $wpdb->query($sql);
+        }
+    }
+
+    public function search_layout_posts() {
+
+        if (isset($_POST['value'])) {
+            $value = $_POST['value'];
+            $category = $_POST['category'];
+            $selected = $_POST['selected'];
+            $args = array('s' => $value, 'cat' => $category, 'post__not_in' => $selected);
+            $the_query = new WP_Query($args);
+            if ($the_query->have_posts()) {
+                $html = "";
+                while ($the_query->have_posts()) {
+                    $the_query->the_post();
+                    //whatever you want to do with each post
+                    $html .= "<span data-id='" . get_the_ID() . "' class='__post'>" . get_the_title() . "</span>";
+                }
+                $response = array('status' => 'success', 'content' => $html);
+            } else {
+                $response = array('status' => 'failed', 'message' => '<span class="__no_resut">no post found with keyword.</span>');
+            }
+
+            header('Content-Type: application/json');
+            die(json_encode($response));
+        }
+    }
+
+    public function select_from_search() {
+        header('Content-Type: application/json');
+        if (isset($_POST['post_id'])) {
+            $post_id = $_POST['post_id'];
+            $post = get_post($post_id);
+            if (!$post) {
+                die(json_encode(array('status' => 'fail', 'message' => 'invalid post')));
+            }
+
+            $content = "<div id='post_{$post->ID}' class='layout_single_post col-md-3 selected'>";
+            $content .= "<input value='{$post->ID}' type='checkbox' name='layout_posts[]' class='hidden post_selector'/>";
+            $content .= "<div class='layout_post_thumb'>" . $this->getPostThumbnail($post, 'thumb') . "</div>";
+            $content .= "<div class='layout_post_title'>{$post->post_title}</div>";
+            $content .= "</div>";
+
+            die(json_encode(array('status' => 'success', 'content' => $content)));
+        } else {
+            die(json_encode(array('status' => 'fail', 'message' => 'invalid post')));
+        }
+    }
+
+    public function get_parent_category() {
+        if (isset($_POST['category'])) {
+            $cat_id = $_POST['category'];
+            $categories = get_categories(['parent' => $cat_id]);
+            $html = "<option value=''>-choose Category-</option>";
+            foreach ($categories as $key => $category) {
+                $html .= "<option value='{$category->term_id}'>{$category->name}</option>";
+            }
+            header('Content-Type: application/json');
+            die(json_encode(array('status' => 'success', 'content' => $html)));
+        }
+    }
+
+}

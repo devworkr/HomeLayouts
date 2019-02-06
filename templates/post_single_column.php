@@ -18,7 +18,7 @@
                 <div class="col-md-12">
                     <div class="white-img-box">
                         <a href="<?php echo get_the_permalink($postid); ?>">
-                            <?php echo get_the_post_thumbnail($postid, 'full'); ?>
+                            <?php echo get_the_post_thumbnail($postid, 'large'); ?>
                         </a>
                         <h3>
                             <a href="<?php echo get_the_permalink($postid); ?>">

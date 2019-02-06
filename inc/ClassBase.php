@@ -19,33 +19,8 @@ class BaseLayout {
     function __construct() {
         add_action('pre_get_posts', array($this, 'layout_posts_order'));
         add_action('save_post', array($this, 'save_layout_metaboxes'));
-        //add_filter('get_terms', array($this, 'layout_get_object_terms'), 10, 3);
-        //add_filter('wp_get_object_terms', array($this, 'layout_get_object_terms'), 10, 3);
     }
     
-    /*public function layout_get_object_terms($terms) {
-        $tags = ['category'];
-        if (is_admin() && isset($_GET['orderby']))
-            return $terms;
-        foreach ($terms as $key => $term) {
-            if (is_object($term) && isset($term->taxonomy)) {
-                $taxonomy = $term->taxonomy;
-                if (!in_array($taxonomy, $tags))
-                    return $terms;
-            } else {
-                return $terms;
-            }
-        }
-        usort($terms, array($this, 'taxcmp'));
-        return $terms;
-    }
-    
-    public function taxcmp($a, $b) {
-        if ($a->term_order == $b->term_order)
-            return 0;
-        return ( $a->term_order < $b->term_order ) ? -1 : 1;
-    }
-    */
     public static function instance() {
         if (is_null(self::$_instance)) {
             self::$_instance = new self();
@@ -56,7 +31,7 @@ class BaseLayout {
     public function layout_meta_box_callback($post) {
         $value = get_post_meta($post->ID, '_layout_style', true);
         $html = "<select name='layout_style' class='layout_class layout_input' id='is_layout_style'>";
-        $html .= "<option>-choose layout-</option>";
+        $html .= "<option value=''>-choose layout-</option>";
         foreach ($this->layouts as $slug => $layout) {
             if ($value == $slug) {
                 $html .= "<option selected='selected' value='{$slug}'>{$layout}</option>";
@@ -100,7 +75,7 @@ class BaseLayout {
             $content .= "<div id='is_layout_admin_posts' class='layout_posts_wrap row'>";
             foreach ($posts as $key => $post) {
                 $isSelected = in_array($post->ID, $selected_posts) ? 'selected' : '';
-                $checked = in_array($post->ID, $selected_posts) ? 'checked' : '';
+                $checked = in_array($post->ID, $selected_posts) ? 'checked="checked"' : '';
                 $content .= "<div id='post_{$post->ID}' class='layout_single_post col-md-3 {$isSelected}'>";
                 $content .= "<input {$checked} value='{$post->ID}' type='checkbox' name='layout_posts[]' class='hidden post_selector'/>";
                 $content .= "<div class='layout_post_thumb'>" . $this->getPostThumbnail($post, 'thumb') . "</div>";
